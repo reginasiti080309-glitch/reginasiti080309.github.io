@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bloom Daily — Reminder Harian</title>
+<style>
+:root{--pink:#ff77ad;--pink2:#ffe0ec;--green:#83c99a;--green2:#e4f6e9;--ink:#34443b;--muted:#718078;--cream:#fffafc;--white:#fff;--shadow:0 12px 30px #eaa9c326}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#fff4f8,#f0fff3);font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink);min-height:100vh}
+header{padding:28px 18px 22px;background:linear-gradient(120deg,#ffb5d0,#a9e6b8);border-radius:0 0 30px 30px}
+.top{max-width:1000px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:14px}.brand{font-weight:900;font-size:1.25rem;letter-spacing:.3px}.brand span{color:#fff}.date{font-size:.88rem;background:#ffffffa8;padding:9px 12px;border-radius:99px}
+h1{font-size:clamp(1.8rem,5vw,2.6rem);line-height:1.1;margin:25px 0 8px;max-width:680px}header p{margin:0;max-width:580px;color:#3f5c4a}
+main{max-width:1000px;margin:22px auto;padding:0 16px 40px}.notice{background:#fff4ce;border:1px solid #f4dfa0;padding:12px 14px;border-radius:15px;font-size:.88rem;margin-bottom:18px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}.stat,.panel,.task{background:#fff;border:1px solid #f6e8ee;border-radius:20px;box-shadow:var(--shadow)}.stat{padding:16px}.stat b{display:block;font-size:1.55rem;color:#e75c97}.stat small{color:var(--muted)}
+.layout{display:grid;grid-template-columns:1.35fr .85fr;gap:18px}.panel{padding:18px;margin-bottom:18px}.panel h2{font-size:1.15rem;margin:0 0 14px}.section-title{display:flex;align-items:center;justify-content:space-between;gap:10px}.pill{font-size:.75rem;border-radius:99px;padding:5px 9px;background:var(--green2);color:#39764b}
+.tasks{display:grid;gap:10px}.task{box-shadow:none;padding:13px;display:flex;align-items:center;gap:12px;border-color:#f4eaf0}.task.done{background:#f1fbf3;border-color:#b8e4c3}.emoji{width:42px;height:42px;flex-shrink:0;border-radius:14px;display:grid;place-items:center;background:var(--pink2);font-size:1.35rem}.task:nth-child(even) .emoji{background:var(--green2)}.task-info{flex:1;min-width:0}.task-info b{display:block;font-size:.96rem}.task-info small{color:var(--muted)}.task-time{font-size:.78rem;color:#c64f86;font-weight:800;white-space:nowrap}.check{width:23px;height:23px;accent-color:#65b77c;flex-shrink:0}
+button,input,select{font:inherit}button{border:0;border-radius:12px;padding:10px 13px;background:var(--pink);color:white;font-weight:750;cursor:pointer}button.secondary{background:var(--green2);color:#347249}button.ghost{background:#fff0f6;color:#b84d7c}button:active{transform:scale(.98)}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{display:flex;flex-direction:column;gap:5px;font-size:.82rem;color:var(--muted)}input,select{width:100%;padding:10px;border:1px solid #eadde3;border-radius:11px;background:#fff;color:var(--ink)}.full{grid-column:1/-1}.buttonrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.progress{height:9px;background:#f9e6ef;border-radius:99px;overflow:hidden;margin:8px 0 4px}.progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--pink),var(--green));transition:width .2s}
+.water{text-align:center;background:linear-gradient(135deg,#fff0f6,#edfff1);border-radius:16px;padding:14px}.water strong{font-size:1.5rem}.water p{margin:4px 0 10px;color:var(--muted);font-size:.85rem}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.day{padding:8px 2px;text-align:center;border-radius:11px;background:#f8f8f8;font-size:.72rem}.day.active{background:#dff5e5;color:#347249;font-weight:800}.day small{display:block;font-size:.95rem;margin-top:4px}
+footer{text-align:center;color:var(--muted);font-size:.78rem;padding:10px}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#35483c;color:#fff;padding:12px 16px;border-radius:14px;box-shadow:var(--shadow);display:none;z-index:5;max-width:90vw}
+@media(max-width:740px){.layout{grid-template-columns:1fr}.stats{gap:8px}.stat{padding:12px}.stat b{font-size:1.3rem}.top{align-items:flex-start}.date{text-align:right}.task{gap:9px}.task-time{display:none}}
+@media(max-width:380px){.formgrid{grid-template-columns:1fr}.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<header><div class="top"><div class="brand">🌷 Bloom <span>Daily</span></div><div class="date" id="todayLabel">Hari ini</div></div>
+<h1>Rawat diri, satu kebiasaan kecil setiap hari ✨</h1><p>Pengingat skincare, minum, makan, keramas, dan olahraga dalam satu tempat.</p></header>
+<main>
+<div class="notice">🔔 <b>Catatan alarm:</b> Izinkan notifikasi saat diminta dan biarkan halaman ini tetap terbuka agar pengingat bisa muncul. Browser tidak selalu bisa membunyikan alarm saat halaman tertutup.</div>
+<div class="stats"><div class="stat"><b id="doneCount">0/0</b><small>Rutinitas selesai</small><div class="progress"><span id="progressBar"></span></div></div><div class="stat"><b id="waterStat">0 gelas</b><small>Air putih hari ini</small></div><div class="stat"><b id="streakStat">🌱</b><small>Mulai dari hari ini</small></div></div>
+<div class="layout"><section>
+<div class="panel"><div class="section-title"><h2>🗓️ Rutinitas hari ini</h2><span class="pill" id="dayName">Hari ini</span></div><div class="tasks" id="taskList"></div></div>
+<div class="panel"><h2>⏰ Tambah pengingat</h2><form id="reminderForm"><div class="formgrid">
+<label class="field">Nama kegiatan<input id="reminderName" required maxlength="60" placeholder="Contoh: Pakai sunscreen"></label>
+<label class="field">Kategori<select id="reminderCategory"><option value="✨">Skincare</option><option value="💧">Minum</option><option value="🍽️">Makan</option><option value="🧴">Keramas</option><option value="🏃">Olahraga</option><option value="🌼">Lainnya</option></select></label>
+<label class="field">Jam pengingat<input id="reminderTime" type="time" required value="15:00"></label>
+<label class="field">Ulangi<select id="reminderRepeat"><option value="daily">Setiap hari</option><option value="weekdays">Senin–Jumat</option><option value="weekends">Sabtu–Minggu</option></select></label>
+</div><div class="buttonrow"><button type="submit">＋ Simpan pengingat</button><button class="secondary" type="button" id="notifyBtn">Aktifkan notifikasi</button></div></form></div>
+</section>
+<aside>
+<div class="panel"><h2>💧 Target minum</h2><div class="water"><strong id="waterCount">0 / 8 gelas</strong><p>Sesuaikan dengan kebutuhanmu dan cuaca.</p><button id="addWater">＋ Tambah 1 gelas</button> <button class="ghost" id="removeWater">−</button></div></div>
+<div class="panel"><h2>🌿 Ide jadwal mingguan</h2><div class="week" id="weekStrip"></div><p style="font-size:.84rem;color:var(--muted);margin-bottom:0">Keramas: pilih 2–3 hari sesuai kondisi rambut. Olahraga: mulai ringan, misalnya jalan kaki atau peregangan 10–20 menit.</p></div>
+<div class="panel"><h2>🥗 Pengingat makan seimbang</h2><div class="tasks">
+<div class="task"><div class="emoji">🍳</div><div class="task-info"><b>Sarapan</b><small>Usahakan tidak melewatkan makan</small></div></div>
+<div class="task"><div class="emoji">🍚</div><div class="task-info"><b>Makan siang</b><small>Karbohidrat, protein, sayur/buah</small></div></div>
+<div class="task"><div class="emoji">🍲</div><div class="task-info"><b>Makan malam</b><small>Sesuaikan dengan rasa lapar</small></div></div>
+</div>
+<div style="margin-top:16px;padding:14px;border-radius:16px;background:linear-gradient(135deg,#fff0f6,#edfff1)">
+<div class="section-title"><h2 style="margin:0">🍓 Ide menu hari ini</h2><span class="pill">Inspirasi</span></div>
+<p style="font-size:.84rem;color:var(--muted);margin:7px 0 12px">Pilih ide makanan yang cocok dengan selera, alergi, dan bahan yang tersedia.</p>
+<label class="field">Mau ide untuk makan apa?
+<select id="mealType"><option value="breakfast">Sarapan</option><option value="lunch">Makan siang</option><option value="dinner">Makan malam</option><option value="snack">Camilan</option></select></label>
+<div id="mealSuggestion" style="padding:12px;background:#ffffffc9;border-radius:13px;margin-top:10px;font-size:.9rem;line-height:1.55"></div>
+<button class="secondary" type="button" id="newMeal" style="margin-top:10px">🔄 Ide menu lainnya</button>
+</div>
+<p style="font-size:.82rem;color:var(--muted)">Makanan pedas dan manis boleh dinikmati sesuai selera dan toleransi tubuh. Tidak perlu menghindari kelompok makanan tertentu tanpa alasan kesehatan.</p></div>
+<div class="panel"><h2>🧺 Kelola rutinitas</h2><p style="font-size:.85rem;color:var(--muted)">Tandai kegiatan yang selesai. Rutinitas bawaan dan pengingat tersimpan di browser perangkat ini.</p><div class="buttonrow"><button class="secondary" id="resetDay">Reset centang hari ini</button><button class="ghost" id="restoreDefaults">Pulihkan rutinitas awal</button></div></div>
+</aside></div>
+<footer>Made with 🌷 for your everyday self-care · Bloom Daily</footer></main><div id="toast" role="status"></div>
+<script>
+const defaultTasks=[
+{id:'wash-am',name:'Cuci muka & skincare pagi',detail:'Pembersih, pelembap, sunscreen',time:'07:00',icon:'🌞',category:'skincare',repeat:'daily'},
+{id:'water-1',name:'Minum air putih',detail:'Istirahat sebentar dan minum',time:'09:00',icon:'💧',category:'water',repeat:'daily'},
+{id:'lunch',name:'Makan siang',detail:'Makan cukup dan seimbang',time:'12:00',icon:'🍱',category:'food',repeat:'daily'},
+{id:'wash-noon',name:'Reapply sunscreen',detail:'Jika beraktivitas di luar, sesuai petunjuk produk',time:'13:00',icon:'🌤️',category:'skincare',repeat:'daily'},
+{id:'water-2',name:'Waktunya minum',detail:'Minum air sesuai kebutuhan',time:'15:00',icon:'🫧',category:'water',repeat:'daily'},
+{id:'move',name:'Olahraga ringan',detail:'Jalan kaki atau peregangan 10–20 menit',time:'16:30',icon:'🏃',category:'exercise',repeat:'daily'},
+{id:'hair',name:'Keramas (hari pilihan)',detail:'Contoh: Senin, Kamis, Sabtu — sesuaikan rambut',time:'17:30',icon:'🧴',category:'hair',repeat:'selected'},
+{id:'dinner',name:'Makan malam',detail:'Makan sesuai rasa lapar',time:'18:30',icon:'🍲',category:'food',repeat:'daily'},
+{id:'wash-pm',name:'Skincare malam',detail:'Bersihkan wajah & pakai pelembap',time:'20:30',icon:'🌙',category:'skincare',repeat:'daily'},
+{id:'water-3',name:'Minum sebelum santai',detail:'Tidak perlu memaksakan minum berlebihan',time:'21:00',icon:'🥛',category:'water',repeat:'daily'}
+];
+const $=id=>document.getElementById(id);
+const todayKey=()=>new Date().toISOString().slice(0,10);
+let tasks=JSON.parse(localStorage.getItem('bloomTasks')||'null')||defaultTasks;
+let water=Number(localStorage.getItem('bloomWaterDate')===todayKey()?localStorage.getItem('bloomWater')||0:0);
+let done=JSON.parse(localStorage.getItem('bloomDoneDate')===todayKey()?localStorage.getItem('bloomDone')||'{}':'{}');
+let fired=new Set();
+function save(){localStorage.setItem('bloomTasks',JSON.stringify(tasks));localStorage.setItem('bloomWater',water);localStorage.setItem('bloomWaterDate',todayKey());localStorage.setItem('bloomDone',JSON.stringify(done));localStorage.setItem('bloomDoneDate',todayKey())}
+function toast(msg){$('toast').textContent=msg;$('toast').style.display='block';clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>$('toast').style.display='none',3000)}
+function isToday(t){let d=new Date().getDay();if(t.repeat==='weekdays'&&(d===0||d===6))return false;if(t.repeat==='weekends'&&d!==0&&d!==6)return false;if(t.repeat==='selected'&&![1,4,6].includes(d))return false;return true}
+function render(){
+ const now=new Date();$('todayLabel').textContent=now.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long'});$('dayName').textContent=now.toLocaleDateString('id-ID',{weekday:'long'});
+ const visible=tasks.filter(isToday).sort((a,b)=>a.time.localeCompare(b.time));
+ $('taskList').innerHTML=visible.map(t=>`<label class="task ${done[t.id]?'done':''}"><div class="emoji">${t.icon}</div><div class="task-info"><b>${escapeHtml(t.name)}</b><small>${escapeHtml(t.detail||'Pengingat harian')}</small></div><span class="task-time">${t.time}</span><input class="check" type="checkbox" aria-label="Tandai ${escapeHtml(t.name)} selesai" data-id="${t.id}" ${done[t.id]?'checked':''}></label>`).join('')||'<p>Belum ada pengingat untuk hari ini.</p>';
+ document.querySelectorAll('.check').forEach(c=>c.addEventListener('change',()=>{done[c.dataset.id]=c.checked;save();render()}));
+ const complete=visible.filter(t=>done[t.id]).length;$('doneCount').textContent=`${complete}/${visible.length}`;$('progressBar').style.width=(visible.length?complete/visible.length*100:0)+'%';
+ $('waterCount').textContent=`${water} / 8 gelas`;$('waterStat').textContent=water+' gelas';$('streakStat').textContent=complete===visible.length&&visible.length?'✨ Hebat!':'🌱 Pelan-pelan';
+ $('weekStrip').innerHTML=['Min','Sen','Sel','Rab','Kam','Jum','Sab'].map((d,i)=>{let date=new Date();let diff=(i-date.getDay());date.setDate(date.getDate()+diff);return `<div class="day ${i===new Date().getDay()?'active':''}">${d}<small>${date.getDate()}</small></div>`}).join('');
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+$('addWater').onclick=()=>{water=Math.min(30,water+1);save();render()};$('removeWater').onclick=()=>{water=Math.max(0,water-1);save();render()};
+$('resetDay').onclick=()=>{if(confirm('Reset semua centang rutinitas hari ini?')){done={};save();render();toast('Centang hari ini direset.')}};
+$('restoreDefaults').onclick=()=>{if(confirm('Pulihkan rutinitas awal? Pengingat tambahan akan dihapus.')){tasks=defaultTasks.map(t=>({...t}));done={};save();render();toast('Rutinitas awal dipulihkan.')}};
+$('reminderForm').addEventListener('submit',e=>{e.preventDefault();let name=$('reminderName').value.trim(),time=$('reminderTime').value,cat=$('reminderCategory').value,repeat=$('reminderRepeat').value;if(!name||!time)return;tasks.push({id:'custom-'+Date.now(),name,detail:'Pengingat pribadi',time,icon:cat,category:'custom',repeat});save();render();e.target.reset();$('reminderTime').value='15:00';toast('Pengingat berhasil ditambahkan! 🌷')});
+$('notifyBtn').onclick=async()=>{if(!('Notification'in window)){toast('Browser ini belum mendukung notifikasi.');return}try{let permission=await Notification.requestPermission();toast(permission==='granted'?'Notifikasi aktif selama halaman diizinkan berjalan.':'Izin notifikasi belum diberikan.');}catch(e){toast('Tidak bisa mengaktifkan notifikasi di browser ini.')}};
+function checkAlarms(){if(!('Notification'in window)||Notification.permission!=='granted')return;let now=new Date(),day=todayKey(),minute=day+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');tasks.filter(isToday).forEach(t=>{let key=minute+' '+t.id;if(t.time===minute.slice(11)&&!fired.has(key)&&!done[t.id]){fired.add(key);try{new Notification('Bloom Daily 🌷',{body:t.name+' — '+(t.detail||'Waktunya rutinitasmu!')});}catch(e){}}})}
+
+const mealIdeas={
+ breakfast:[
+  ['🥣 Oatmeal pisang','Oatmeal dengan susu atau yoghurt dan potongan pisang.'],
+  ['🍞 Roti telur','Roti gandum atau roti biasa dengan telur dan buah.'],
+  ['🍚 Nasi dan telur','Nasi, telur, dan sayur atau buah yang tersedia.'],
+  ['🥪 Sandwich sederhana','Roti isi telur/ayam, ditambah sayuran jika ada.']
+ ],
+ lunch:[
+  ['🍗 Nasi ayam dan sayur','Nasi, ayam panggang/tumis, dan sayur.'],
+  ['🐟 Nasi ikan','Nasi, ikan, tahu/tempe, dan sayuran.'],
+  ['🍲 Sup rumahan','Sup sayur dengan ayam atau tahu, ditemani nasi.'],
+  ['🥢 Tumis tahu tempe','Tahu atau tempe, tumis sayur, dan nasi.']
+ ],
+ dinner:[
+  ['🍜 Sup hangat','Sup sayur dengan telur, ayam, atau tahu; tambah nasi sesuai selera.'],
+  ['🍳 Nasi telur sayur','Nasi, telur, dan sayur tumis sederhana.'],
+  ['🐟 Ikan dan sayur','Ikan, sayur, serta kentang atau nasi.'],
+  ['🌯 Wrap isi protein','Tortilla/roti isi ayam atau tahu dan sayuran.']
+ ],
+ snack:[
+  ['🍌 Pisang dan yoghurt','Buah dengan yoghurt atau susu.'],
+  ['🥜 Roti dengan selai kacang','Camilan yang mengenyangkan; perhatikan alergi kacang.'],
+  ['🍠 Ubi kukus','Ubi dengan air putih atau susu.'],
+  ['🍉 Buah potong','Buah pilihan, bisa dipadukan dengan keju atau yoghurt.']
+ ]
+};
+let lastMealIndex={};
+function showMealIdea(){
+ const type=$('mealType').value, ideas=mealIdeas[type];
+ let idx=Math.floor(Math.random()*ideas.length);
+ if(ideas.length>1&&idx===lastMealIndex[type])idx=(idx+1)%ideas.length;
+ lastMealIndex[type]=idx;
+ const item=ideas[idx];
+ $('mealSuggestion').innerHTML='<strong>'+item[0]+'</strong><br>'+item[1]+'<br><small style="color:var(--muted)">Ide fleksibel—sesuaikan porsi dengan rasa lapar, kebutuhan, dan bahan yang ada.</small>';
+}
+$('mealType').addEventListener('change',showMealIdea);
+$('newMeal').addEventListener('click',showMealIdea);
+showMealIdea();
+render();checkAlarms();setInterval(checkAlarms,15000);
+</script>
+</body></html>
